@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🏀 スコアブック</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="スコアブック">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh;user-select:none;}
+input,select{font-size:16px;font-family:inherit;}
+button{cursor:pointer;-webkit-appearance:none;border:none;}
+button:active{opacity:.7;}
+.hidden{display:none!important;}
+
+/* ===== TOP ===== */
+#topPage{min-height:100vh;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:16px;}
+.top-logo{font-size:4rem;}
+.top-title{color:#fff;font-size:1.8rem;font-weight:bold;}
+.top-sub{color:#888;font-size:.9rem;margin-bottom:24px;}
+.top-btn{width:100%;max-width:320px;padding:20px;border-radius:16px;font-size:1.1rem;font-weight:bold;text-align:center;}
+.top-btn-primary{background:#e8671a;color:#fff;}
+.top-btn-secondary{background:#16213e;color:#fff;border:2px solid #3498db;}
+
+/* ===== SETUP ===== */
+#setupPage{background:#f5f5f0;min-height:100vh;padding-bottom:40px;}
+.page-header{background:#1a1a2e;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.page-header h1{color:#fff;font-size:1.1rem;flex:1;}
+.back-btn{background:transparent;color:#fff;font-size:1.5rem;padding:2px 8px;}
+.setup-inner{padding:14px;max-width:600px;margin:0 auto;}
+.s-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.s-card-title{font-size:.8rem;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.s-card-title.home{color:#2980b9;}.s-card-title.away{color:#e74c3c;}
+.s-row{display:flex;gap:8px;margin-bottom:10px;}
+.s-field{flex:1;}
+.s-field label{display:block;font-size:.75rem;color:#aaa;margin-bottom:3px;}
+.s-input{width:100%;background:#f8f8f8;border:1.5px solid #e8e8e8;color:#1a1a1a;padding:10px 12px;border-radius:10px;font-size:16px;outline:none;}
+.s-input:focus{border-color:#e8671a;}
+.pr-row{display:flex;align-items:center;gap:6px;background:#f8f8f8;border-radius:10px;padding:8px;margin-bottom:6px;}
+.pr-num{width:54px;flex-shrink:0;}
+.pr-num input{text-align:center;}
+.pr-name{flex:1;}
+.pr-del{background:#fee;color:#e74c3c;border-radius:8px;width:38px;height:38px;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.add-player-btn{width:100%;padding:11px;background:transparent;border:2px dashed #ddd;color:#aaa;border-radius:10px;font-size:.88rem;font-weight:bold;margin-top:4px;}
+.start-game-btn{display:block;width:100%;max-width:300px;margin:8px auto 0;background:#e8671a;color:#fff;padding:17px;border-radius:30px;font-size:1.05rem;font-weight:bold;letter-spacing:1px;}
+
+/* ===== GAME ===== */
+#gamePage{background:#f0f0eb;min-height:100vh;display:flex;flex-direction:column;}
+.game-header{background:#1a1a2e;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
+.game-q{color:#e8671a;font-size:.88rem;font-weight:bold;}
+.game-phase{color:#fff;font-size:.88rem;font-weight:bold;}
+.menu-btn{background:transparent;color:#fff;font-size:1.4rem;padding:2px 6px;}
+
+/* Scoreboard */
+.scoreboard{background:#fff;padding:10px 12px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.sb-team{text-align:center;}
+.sb-tname{font-size:.78rem;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;}
+.sb-tname.h{color:#2980b9;}.sb-tname.a{color:#e74c3c;}
+.sb-tscore{font-size:2.6rem;font-weight:bold;line-height:1;}
+.sb-tscore.h{color:#2980b9;}.sb-tscore.a{color:#e74c3c;}
+.sb-to{font-size:.65rem;color:#bbb;margin-top:1px;}
+.sb-center{text-align:center;}
+.timer-disp{font-size:1.5rem;font-weight:bold;color:#1a1a1a;font-variant-numeric:tabular-nums;}
+.timer-btns{display:flex;justify-content:center;gap:6px;margin-top:3px;}
+.timer-adj{width:28px;height:28px;border-radius:50%;border:2px solid #e8671a;color:#e8671a;background:transparent;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:bold;}
+.sb-vs{color:#ccc;font-size:.8rem;margin-top:2px;}
+
+/* Main area */
+.game-main{display:flex;flex:1;padding:6px;gap:6px;min-height:0;}
+.player-col{width:76px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+.p-chip{background:#fff;border-radius:10px;padding:7px 4px;text-align:center;border:2px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:pointer;}
+.p-chip.h.sel{background:#e8671a;border-color:#e8671a;color:#fff;}
+.p-chip.a.sel{background:#e74c3c;border-color:#e74c3c;color:#fff;}
+.p-chip-num{font-size:1.25rem;font-weight:bold;line-height:1.1;}
+.p-chip-name{font-size:.58rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:68px;margin:1px auto 0;}
+.p-chip-pts{font-size:.62rem;color:#e8671a;font-weight:bold;margin-top:1px;}
+.p-chip.sel .p-chip-pts{color:rgba(255,255,255,.8);}
+.p-chip-f{font-size:.58rem;color:#e74c3c;}
+
+/* Court area */
+.court-area{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.action-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.act-btn{padding:11px 4px;border-radius:10px;font-size:.82rem;font-weight:bold;text-align:center;}
+.act-btn.success{background:#27ae60;color:#fff;}
+.act-btn.ft{background:#f39c12;color:#fff;}
+.act-btn.miss{background:#bbb;color:#fff;}
+.act-btn:disabled{opacity:.3;}
+.court-wrap{flex:1;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:6px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.court-wrap svg{width:100%;height:100%;max-height:150px;}
+.recent-wrap{background:#fff;border-radius:10px;padding:6px 8px;max-height:56px;overflow-y:auto;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.recent-label{font-size:.65rem;color:#bbb;margin-bottom:2px;}
+.recent-item{font-size:.72rem;color:#666;padding:1px 0;}
+
+/* Bottom actions */
+.bottom-actions{background:#fff;border-top:1px solid #eee;padding:7px;}
+.bottom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.b-btn{padding:9px 3px;border-radius:9px;font-size:.72rem;font-weight:bold;background:#f4f4f4;color:#333;text-align:center;line-height:1.3;}
+.b-btn.foul{background:#e74c3c;color:#fff;}
+.b-btn.cancel{background:#fee;color:#e74c3c;}
+.b-btn:disabled{opacity:.3;}
+
+/* ===== RECORDS ===== */
+#recordsPage{background:#f5f5f0;min-height:100vh;padding-bottom:40px;}
+.rec-inner{padding:12px;max-width:600px;margin:0 auto;}
+.rec-empty{text-align:center;color:#bbb;padding:60px 0;font-size:.95rem;}
+.rec-card{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.rec-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.rec-date{font-size:.72rem;color:#bbb;margin-bottom:2px;}
+.rec-teams{font-size:.92rem;font-weight:bold;}
+.rec-score{font-size:1.25rem;font-weight:bold;color:#e8671a;}
+.rec-win{font-size:.7rem;color:#27ae60;text-align:right;}
+.rec-detail{display:none;border-top:1px solid #f0f0f0;padding:12px;}
+.rec-detail.show{display:block;}
+.rec-note{font-size:.75rem;color:#aaa;margin-bottom:8px;}
+.stats-block{margin-bottom:14px;}
+.stats-tname{font-size:.85rem;font-weight:bold;margin-bottom:5px;}
+.stats-tname.home{color:#2980b9;}.stats-tname.away{color:#e74c3c;}
+.stats-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table.st{width:100%;border-collapse:collapse;font-size:.72rem;min-width:360px;}
+table.st th{background:#f8f8f8;padding:5px 4px;text-align:center;color:#999;font-size:.68rem;white-space:nowrap;}
+table.st th:first-child{text-align:left;}
+table.st td{padding:4px;text-align:center;border-bottom:1px solid #f4f4f4;}
+table.st td:first-child{text-align:left;font-size:.75rem;}
+.st-input{width:38px;padding:3px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;text-align:center;font-size:.78rem;}
+.st-input:focus{border-color:#e8671a;outline:none;}
+.rec-actions{display:flex;gap:8px;margin-top:12px;}
+.rec-save{flex:1;padding:11px;background:#e8671a;color:#fff;border-radius:10px;font-size:.85rem;font-weight:bold;}
+.rec-del{padding:11px 14px;background:#fee;color:#e74c3c;border-radius:10px;font-size:.85rem;font-weight:bold;}
+
+/* ===== MODALS ===== */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal.show{display:flex;}
+.modal-box{background:#fff;border-radius:20px;padding:24px 18px;width:100%;max-width:320px;text-align:center;}
+.modal-box h3{font-size:1.05rem;margin-bottom:16px;color:#333;}
+.modal-grid{display:grid;gap:8px;margin-bottom:10px;}
+.mg3{grid-template-columns:1fr 1fr 1fr;}
+.mg2{grid-template-columns:1fr 1fr;}
+.mc-btn{padding:16px 8px;border-radius:12px;font-size:1rem;font-weight:bold;color:#fff;}
+.btn-1p{background:#27ae60;}.btn-2p{background:#2980b9;}.btn-3p{background:#8e44ad;}
+.btn-yes{background:#27ae60;}
+.modal-cancel{width:100%;padding:12px;background:#f4f4f4;color:#888;border-radius:12px;font-size:.9rem;}
+
+/* End modal */
+.end-box{background:#1a1a2e;border-radius:20px;padding:28px 20px;width:100%;max-width:360px;text-align:center;color:#fff;}
+.end-box h2{color:#e8671a;font-size:1.5rem;margin-bottom:8px;}
+.end-winner{font-size:1.15rem;color:#f39c12;margin-bottom:4px;}
+.end-score{color:#aaa;margin-bottom:20px;font-size:.92rem;}
+.end-btns{display:flex;flex-direction:column;gap:10px;}
+.end-btn{padding:15px;border-radius:28px;font-size:1rem;font-weight:bold;}
+.end-primary{background:#e8671a;color:#fff;}
+.end-secondary{background:transparent;color:#3498db;border:2px solid #3498db;}
+
+/* Drawer */
+.drawer{display:none;position:fixed;inset:0;z-index:200;}
+.drawer.show{display:flex;}
+.drawer-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:220px;background:#fff;padding:56px 16px 20px;display:flex;flex-direction:column;gap:8px;}
+.d-btn{padding:13px;border-radius:12px;font-size:.9rem;font-weight:bold;background:#f8f8f8;color:#333;text-align:left;}
+.d-btn.danger{color:#e74c3c;}
+</style>
+</head>
+<body>
+
+<!-- ========== TOP ========== -->
+<div id="topPage">
+  <div class="top-logo">🏀</div>
+  <div class="top-title">スコアブック</div>
+  <div class="top-sub">バスケットボール試合記録アプリ</div>
+  <button class="top-btn top-btn-primary" onclick="goSetup()">🆕 新しい試合を始める</button>
+  <button class="top-btn top-btn-secondary" onclick="goRecords()">📋 過去の試合記録</button>
+</div>
+
+<!-- ========== SETUP ========== -->
+<div id="setupPage" class="hidden">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTop()">←</button>
+    <h1>試合設定</h1>
+  </div>
+  <div class="setup-inner">
+    <div class="s-card">
+      <div class="s-card-title">⚙ ゲーム設定</div>
+      <div class="s-row">
+        <div class="s-field"><label>クォーター数</label><input type="number" class="s-input" id="numQ" value="4" min="2" max="4" inputmode="numeric"></div>
+        <div class="s-field"><label>タイムアウト（各チーム）</label><input type="number" class="s-input" id="numTO" value="5" min="1" max="10" inputmode="numeric"></div>
+        <div class="s-field"><label>Q時間（分）</label><input type="number" class="s-input" id="qMins" value="10" min="1" max="20" inputmode="numeric"></div>
+      </div>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title home">🔵 ホームチーム</div>
+      <input type="text" class="s-input" id="homeTeamName" placeholder="チーム名" value="ホーム" autocomplete="off" style="margin-bottom:10px">
+      <div id="homePR">
+        <div class="pr-row" id="hpr0"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr0')">✕</button></div>
+        <div class="pr-row" id="hpr1"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr1')">✕</button></div>
+        <div class="pr-row" id="hpr2"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr2')">✕</button></div>
+        <div class="pr-row" id="hpr3"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr3')">✕</button></div>
+        <div class="pr-row" id="hpr4"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr4')">✕</button></div>
+        <div class="pr-row hidden" id="hpr5"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr5')">✕</button></div>
+        <div class="pr-row hidden" id="hpr6"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr6')">✕</button></div>
+        <div class="pr-row hidden" id="hpr7"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr7')">✕</button></div>
+        <div class="pr-row hidden" id="hpr8"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr8')">✕</button></div>
+        <div class="pr-row hidden" id="hpr9"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr9')">✕</button></div>
+        <div class="pr-row hidden" id="hpr10"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr10')">✕</button></div>
+        <div class="pr-row hidden" id="hpr11"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr11')">✕</button></div>
+        <div class="pr-row hidden" id="hpr12"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr12')">✕</button></div>
+        <div class="pr-row hidden" id="hpr13"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr13')">✕</button></div>
+        <div class="pr-row hidden" id="hpr14"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('hpr14')">✕</button></div>
+      </div>
+      <button type="button" class="add-player-btn" onclick="showNextRow('h')">＋ 選手を追加</button>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title away">🔴 アウェイチーム</div>
+      <input type="text" class="s-input" id="awayTeamName" placeholder="チーム名" value="アウェイ" autocomplete="off" style="margin-bottom:10px">
+      <div id="awayPR">
+        <div class="pr-row" id="apr0"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr0')">✕</button></div>
+        <div class="pr-row" id="apr1"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr1')">✕</button></div>
+        <div class="pr-row" id="apr2"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr2')">✕</button></div>
+        <div class="pr-row" id="apr3"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr3')">✕</button></div>
+        <div class="pr-row" id="apr4"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr4')">✕</button></div>
+        <div class="pr-row hidden" id="apr5"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr5')">✕</button></div>
+        <div class="pr-row hidden" id="apr6"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr6')">✕</button></div>
+        <div class="pr-row hidden" id="apr7"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr7')">✕</button></div>
+        <div class="pr-row hidden" id="apr8"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr8')">✕</button></div>
+        <div class="pr-row hidden" id="apr9"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr9')">✕</button></div>
+        <div class="pr-row hidden" id="apr10"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr10')">✕</button></div>
+        <div class="pr-row hidden" id="apr11"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr11')">✕</button></div>
+        <div class="pr-row hidden" id="apr12"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr12')">✕</button></div>
+        <div class="pr-row hidden" id="apr13"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr13')">✕</button></div>
+        <div class="pr-row hidden" id="apr14"><div class="pr-num"><input type="number" class="s-input" placeholder="#" min="0" max="99" inputmode="numeric"></div><div class="pr-name"><input type="text" class="s-input" placeholder="選手名" autocomplete="off"></div><button class="pr-del" onclick="hideRow('apr14')">✕</button></div>
+      </div>
+      <button type="button" class="add-player-btn" style="border-color:#e74c3c;color:#e74c3c;" onclick="showNextRow('a')">＋ 選手を追加</button>
+    </div>
+
+    <button type="button" class="start-game-btn" onclick="startGame()">🏀 試合開始</button>
+  </div>
+</div>
+
+<!-- ========== GAME ========== -->
+<div id="gamePage" class="hidden">
+  <div class="game-header">
+    <span class="game-q" id="gameQ">Q1</span>
+    <span class="game-phase" id="gamePhase">試合中</span>
+    <button class="menu-btn" onclick="openDrawer()">☰</button>
+  </div>
+
+  <div class="scoreboard">
+    <div class="sb-team">
+      <div class="sb-tname h" id="sbHN">ホーム</div>
+      <div class="sb-tscore h" id="sbHS">0</div>
+      <div class="sb-to" id="sbHTO">TO 残り5</div>
+    </div>
+    <div class="sb-center">
+      <div class="timer-disp" id="timerDisp">10:00</div>
+      <div class="timer-btns">
+        <button class="timer-adj" onclick="timerAdj(30)">＋</button>
+        <button class="timer-adj" onclick="timerAdj(-30)">－</button>
+      </div>
+      <div class="sb-vs">VS</div>
+    </div>
+    <div class="sb-team">
+      <div class="sb-tname a" id="sbAN">アウェイ</div>
+      <div class="sb-tscore a" id="sbAS">0</div>
+      <div class="sb-to" id="sbATO">TO 残り5</div>
+    </div>
+  </div>
+
+  <div class="game-main">
+    <div class="player-col" id="homePL"></div>
+    <div class="court-area">
+      <div class="action-top">
+        <button class="act-btn success" id="btnSuccess" onclick="onSuccess()" disabled>✓ 成功</button>
+        <button class="act-btn ft" id="btnFT" onclick="onFT()" disabled>FT +1</button>
+        <button class="act-btn miss" id="btnMiss" onclick="onMiss()" disabled>✗ 失敗</button>
+      </div>
+      <div class="court-wrap">
+        <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="192" height="142" rx="4" fill="#fafaf8" stroke="#ddd" stroke-width="2"/>
+          <line x1="100" y1="4" x2="100" y2="146" stroke="#ddd" stroke-width="1.5"/>
+          <circle cx="100" cy="75" r="16" fill="none" stroke="#ddd" stroke-width="1.5"/>
+          <rect x="4" y="46" width="48" height="58" fill="rgba(232,103,26,.07)" stroke="#ddd" stroke-width="1.5"/>
+          <circle cx="17" cy="75" r="5" fill="none" stroke="#e8671a" stroke-width="2"/>
+          <line x1="4" y1="75" x2="12" y2="75" stroke="#e8671a" stroke-width="2"/>
+          <path d="M4,26 Q68,75 4,124" fill="none" stroke="#ddd" stroke-width="1.5"/>
+          <rect x="148" y="46" width="48" height="58" fill="rgba(41,128,185,.07)" stroke="#ddd" stroke-width="1.5"/>
+          <circle cx="183" cy="75" r="5" fill="none" stroke="#2980b9" stroke-width="2"/>
+          <line x1="188" y1="75" x2="196" y2="75" stroke="#2980b9" stroke-width="2"/>
+          <path d="M196,26 Q132,75 196,124" fill="none" stroke="#ddd" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="recent-wrap">
+        <div class="recent-label">直近のプレイ</div>
+        <div id="recentList"><div class="recent-item" style="color:#ccc">選手を選択してください</div></div>
+      </div>
+    </div>
+    <div class="player-col" id="awayPL"></div>
+  </div>
+
+  <div class="bottom-actions">
+    <div class="bottom-grid">
+      <button class="b-btn foul" id="btnFoul" onclick="onBottom('foul')" disabled>ファール</button>
+      <button class="b-btn" id="btnOREB" onclick="onBottom('oreb')" disabled>オフェンス<br>REB</button>
+      <button class="b-btn" id="btnTO2" onclick="onBottom('to')" disabled>ターン<br>オーバー</button>
+      <button class="b-btn" id="btnBlock" onclick="onBottom('block')" disabled>ブロック</button>
+      <button class="b-btn" id="btnSteal" onclick="onBottom('steal')" disabled>スティール</button>
+      <button class="b-btn" id="btnDREB" onclick="onBottom('dreb')" disabled>ディフェンス<br>REB</button>
+      <button class="b-btn" id="btnAssist" onclick="onBottom('assist')" disabled>アシスト</button>
+      <button class="b-btn cancel" onclick="cancelSel()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== RECORDS ========== -->
+<div id="recordsPage" class="hidden">
+  <div class="page-header">
+    <button class="back-btn" onclick="goTop()">←</button>
+    <h1>過去の試合記録</h1>
+  </div>
+  <div class="rec-inner" id="recList"></div>
+</div>
+
+<!-- ========== MODALS ========== -->
+<!-- Score modal -->
+<div class="modal" id="scoreModal">
+  <div class="modal-box">
+    <h3 id="scoreTitle">何点ですか？</h3>
+    <div class="modal-grid mg3">
+      <button class="mc-btn btn-1p" onclick="doScore(1)">1点<br><small>FT</small></button>
+      <button class="mc-btn btn-2p" onclick="doScore(2)">2点<br><small>2P</small></button>
+      <button class="mc-btn btn-3p" onclick="doScore(3)">3点<br><small>3P</small></button>
+    </div>
+    <button class="modal-cancel" onclick="closeM('scoreModal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal" id="cfmModal">
+  <div class="modal-box">
+    <h3 id="cfmText"></h3>
+    <div class="modal-grid mg2" style="margin-bottom:8px">
+      <button class="mc-btn btn-yes" id="cfmYes">はい</button>
+      <button class="modal-cancel" onclick="closeM('cfmModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- End modal -->
+<div class="modal" id="endModal">
+  <div class="end-box">
+    <h2>🏆 試合終了</h2>
+    <div class="end-winner" id="endW"></div>
+    <div class="end-score" id="endS"></div>
+    <div class="end-btns">
+      <button class="end-btn end-secondary" onclick="closeM('endModal');goRecords()">📊 記録を見る</button>
+      <button class="end-btn end-primary" onclick="closeM('endModal');goTop()">🏠 トップへ戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-bg" onclick="closeDrawer()"></div>
+  <div class="drawer-panel">
+    <button class="d-btn" onclick="nextQ();closeDrawer()">⏭ 次のQへ</button>
+    <button class="d-btn" onclick="teamTO('h');closeDrawer()">🔵 ホームTO</button>
+    <button class="d-btn" onclick="teamTO('a');closeDrawer()">🔴 アウェイTO</button>
+    <button class="d-btn" onclick="undoAct();closeDrawer()">↩ 取り消し</button>
+    <button class="d-btn danger" onclick="closeDrawer();showCfm('トップへ戻りますか？（試合データは消えます）',function(){goTop();})">← トップへ戻る</button>
+  </div>
+</div>
+
+<script>
+// State
+var G={homeTeam:'',awayTeam:'',hp:[],ap:[],hs:0,as:0,q:1,maxQ:4,hTO:5,aTO:5,maxTO:5,timerSec:600,logs:[],hist:[],sel:null,selIdx:-1};
+
+// Navigation
+function showPage(id){['topPage','setupPage','gamePage','recordsPage'].forEach(function(p){document.getElementById(p).classList.add('hidden');});document.getElementById(id).classList.remove('hidden');}
+function goTop(){showPage('topPage');}
+function goSetup(){showPage('setupPage');}
+function goRecords(){showPage('recordsPage');renderRecords();}
+
+// Setup
+function showNextRow(side){
+  var pfx=side==='h'?'hpr':'apr';
+  for(var i=0;i<15;i++){var r=document.getElementById(pfx+i);if(r&&r.classList.contains('hidden')){r.classList.remove('hidden');var inp=r.querySelector('.pr-name input');if(inp)inp.focus();return;}}
+  alert('最大15名まで登録できます');
+}
+function hideRow(id){var r=document.getElementById(id);if(!r)return;r.classList.add('hidden');r.querySelectorAll('input').forEach(function(i){i.value='';});}
+function collectPlayers(pfx,side){
+  var arr=[];
+  for(var i=0;i<15;i++){
+    var r=document.getElementById(pfx+i);
+    if(!r||r.classList.contains('hidden'))continue;
+    var num=r.querySelector('.pr-num input').value.trim();
+    var name=r.querySelector('.pr-name input').value.trim();
+    if(name)arr.push({id:side+i,num:num||'-',name:name,pts:0,fouls:0,fg2m:0,fg2a:0,fg3m:0,fg3a:0,ftm:0,fta:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,to:0});
+  }
+  return arr;
+}
+function startGame(){
+  var hn=document.getElementById('homeTeamName').value.trim()||'ホーム';
+  var an=document.getElementById('awayTeamName').value.trim()||'アウェイ';
+  var hp=collectPlayers('hpr','h');
+  var ap=collectPlayers('apr','a');
+  if(!hp.length||!ap.length){alert('各チーム1人以上の選手名を入力してください');return;}
+  var maxQ=parseInt(document.getElementById('numQ').value,10)||4;
+  var maxTO=parseInt(document.getElementById('numTO').value,10)||5;
+  var qMins=parseInt(document.getElementById('qMins').value,10)||10;
+  G={homeTeam:hn,awayTeam:an,hp:hp,ap:ap,hs:0,as:0,q:1,maxQ:maxQ,hTO:maxTO,aTO:maxTO,maxTO:maxTO,timerSec:qMins*60,logs:[],hist:[],sel:null,selIdx:-1};
+  showPage('gamePage');
+  renderGame();
+}
+
+// Timer
+function timerAdj(d){G.timerSec=Math.max(0,G.timerSec+d);document.getElementById('timerDisp').textContent=fmtT(G.timerSec);}
+function fmtT(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+// Render
+function renderGame(){
+  var ql=G.q<=G.maxQ?'Q'+G.q:'終了';
+  document.getElementById('gameQ').textContent=ql;
+  document.getElementById('gamePhase').textContent=G.q<=G.maxQ?'試合中':'試合終了';
+  document.getElementById('sbHN').textContent=G.homeTeam;
+  document.getElementById('sbAN').textContent=G.awayTeam;
+  document.getElementById('sbHS').textContent=G.hs;
+  document.getElementById('sbAS').textContent=G.as;
+  document.getElementById('sbHTO').textContent='TO 残り'+G.hTO;
+  document.getElementById('sbATO').textContent='TO 残り'+G.aTO;
+  document.getElementById('timerDisp').textContent=fmtT(G.timerSec);
+  renderPCol('homePL',G.hp,'h');
+  renderPCol('awayPL',G.ap,'a');
+  updateBtns();
+  renderRecent();
+}
+function renderPCol(elId,arr,side){
+  var el=document.getElementById(elId);el.innerHTML='';
+  arr.forEach(function(p,idx){
+    var isSel=(G.sel===side&&G.selIdx===idx);
+    var d=document.createElement('div');
+    d.className='p-chip '+side+(isSel?' sel':'');
+    d.innerHTML='<div class="p-chip-num">'+p.num+'</div><div class="p-chip-name">'+p.name+'</div><div class="p-chip-pts">'+p.pts+'pt</div><div class="p-chip-f">'+(p.fouls>0?'F×'+p.fouls:'')+'</div>';
+    d.onclick=function(){selPlayer(side,idx);};
+    el.appendChild(d);
+  });
+}
+function updateBtns(){
+  var on=G.sel!==null&&G.selIdx>=0&&G.q<=G.maxQ;
+  ['btnSuccess','btnFT','btnMiss','btnFoul','btnOREB','btnTO2','btnBlock','btnSteal','btnDREB','btnAssist'].forEach(function(id){var b=document.getElementById(id);if(b)b.disabled=!on;});
+}
+function renderRecent(){
+  var el=document.getElementById('recentList');
+  if(!G.logs.length){el.innerHTML='<div class="recent-item" style="color:#ccc">まだ記録なし</div>';return;}
+  el.innerHTML=G.logs.slice(-3).reverse().map(function(l){return'<div class="recent-item">['+l.q+'] '+l.name+' '+l.desc+'</div>';}).join('');
+}
+
+// Selection
+function selPlayer(side,idx){if(G.q>G.maxQ)return;G.sel=side;G.selIdx=idx;renderPCol('homePL',G.hp,'h');renderPCol('awayPL',G.ap,'a');updateBtns();}
+function cancelSel(){G.sel=null;G.selIdx=-1;renderPCol('homePL',G.hp,'h');renderPCol('awayPL',G.ap,'a');updateBtns();}
+function getP(){return G.sel===null?null:(G.sel==='h'?G.hp:G.ap)[G.selIdx];}
+
+// Actions
+function onSuccess(){var p=getP();if(!p)return;document.getElementById('scoreTitle').textContent=p.name+' — 何点？';document.getElementById('scoreModal').classList.add('show');}
+function onFT(){doScore(1);}
+function onMiss(){snap();var p=getP();if(!p)return;p.fg2a++;addLog(G.sel,p.name,'シュートMISS');renderGame();}
+function doScore(pts){
+  closeM('scoreModal');snap();
+  var p=getP();if(!p)return;
+  p.pts+=pts;
+  if(pts===1){p.ftm++;p.fta++;}
+  else if(pts===2){p.fg2m++;p.fg2a++;}
+  else{p.fg3m++;p.fg3a++;}
+  if(G.sel==='h')G.hs+=pts;else G.as+=pts;
+  addLog(G.sel,p.name,pts+'点 +'+pts);
+  renderGame();
+}
+function onBottom(act){
+  snap();var p=getP();if(!p)return;
+  var d='';
+  if(act==='foul'){p.fouls++;d='ファール('+p.fouls+'個目)'+(p.fouls>=5?' ⚠ファウルアウト':'');}
+  else if(act==='oreb'){p.oreb++;d='オフェンスREB';}
+  else if(act==='dreb'){p.dreb++;d='ディフェンスREB';}
+  else if(act==='ast'){p.ast++;d='アシスト';}
+  else if(act==='steal'){p.stl++;d='スティール';}
+  else if(act==='block'){p.blk++;d='ブロック';}
+  else if(act==='to'){p.to++;d='ターンオーバー';}
+  addLog(G.sel,p.name,d);renderGame();
+}
+
+// Q / TO / Undo
+function nextQ(){
+  if(G.q>G.maxQ)return;
+  var msg=G.q===G.maxQ?'Q'+G.q+'（最終）を終了して試合を締めますか？':'Q'+G.q+' を終了して Q'+(G.q+1)+' に進みますか？';
+  showCfm(msg,function(){
+    snap();
+    var qMins=parseInt(document.getElementById('qMins').value,10)||10;
+    if(G.q===G.maxQ){
+      addLog(null,'試合','試合終了 🏆');G.q++;renderGame();saveRec();showEndM();
+    }else{
+      addLog(null,'──','Q'+G.q+' 終了');G.q++;G.timerSec=qMins*60;addLog(null,'──','Q'+G.q+' 開始');renderGame();
+    }
+  });
+}
+function teamTO(side){
+  if(side==='h'){if(G.hTO<=0){alert('タイムアウトは残っていません');return;}snap();G.hTO--;addLog('h',G.homeTeam,'タイムアウト (残'+G.hTO+'回)');}
+  else{if(G.aTO<=0){alert('タイムアウトは残っていません');return;}snap();G.aTO--;addLog('a',G.awayTeam,'タイムアウト (残'+G.aTO+'回)');}
+  renderGame();
+}
+function undoAct(){
+  if(!G.hist.length){alert('取り消せる操作がありません');return;}
+  var s=JSON.parse(G.hist.pop());
+  G.hs=s.hs;G.as=s.as;G.q=s.q;G.hTO=s.hTO;G.aTO=s.aTO;G.timerSec=s.timerSec;G.hp=s.hp;G.ap=s.ap;
+  if(G.logs.length)G.logs.pop();
+  renderGame();
+}
+
+// Snapshot / Log
+function snap(){
+  G.hist.push(JSON.stringify({hs:G.hs,as:G.as,q:G.q,hTO:G.hTO,aTO:G.aTO,timerSec:G.timerSec,hp:JSON.parse(JSON.stringify(G.hp)),ap:JSON.parse(JSON.stringify(G.ap))}));
+  if(G.hist.length>60)G.hist.shift();
+}
+function addLog(side,name,desc){G.logs.push({q:G.q<=G.maxQ?'Q'+G.q:'END',side:side,name:name||'',desc:desc});}
+
+// Drawer
+function openDrawer(){document.getElementById('drawer').classList.add('show');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('show');}
+
+// Modals
+function showCfm(msg,cb){
+  document.getElementById('cfmText').textContent=msg;
+  document.getElementById('cfmModal').classList.add('show');
+  var btn=document.getElementById('cfmYes');var nb=btn.cloneNode(true);btn.parentNode.replaceChild(nb,btn);
+  nb.addEventListener('click',function(){closeM('cfmModal');cb();});
+}
+function closeM(id){document.getElementById(id).classList.remove('show');}
+function showEndM(){
+  var w=G.hs>G.as?'🏆 '+G.homeTeam+' の勝利！':G.as>G.hs?'🏆 '+G.awayTeam+' の勝利！':'🤝 引き分け！';
+  document.getElementById('endW').textContent=w;
+  document.getElementById('endS').textContent=G.homeTeam+' '+G.hs+' — '+G.as+' '+G.awayTeam;
+  document.getElementById('endModal').classList.add('show');
+}
+
+// Records
+function saveRec(){
+  var recs=JSON.parse(localStorage.getItem('scorebook_records')||'[]');
+  var now=new Date();
+  var ds=now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  recs.unshift({id:now.getTime(),date:ds,homeTeam:G.homeTeam,awayTeam:G.awayTeam,homeScore:G.hs,awayScore:G.as,maxQ:G.maxQ,hp:JSON.parse(JSON.stringify(G.hp)),ap:JSON.parse(JSON.stringify(G.ap))});
+  if(recs.length>50)recs=recs.slice(0,50);
+  localStorage.setItem('scorebook_records',JSON.stringify(recs));
+}
+function renderRecords(){
+  var el=document.getElementById('recList');
+  var recs=JSON.parse(localStorage.getItem('scorebook_records')||'[]');
+  if(!recs.length){el.innerHTML='<div class="rec-empty">まだ試合記録がありません</div>';return;}
+  el.innerHTML='';
+  recs.forEach(function(r){
+    var w=r.homeScore>r.awayScore?'🏆 '+r.homeTeam:r.awayScore>r.homeScore?'🏆 '+r.awayTeam:'🤝 引き分け';
+    var card=document.createElement('div');card.className='rec-card';
+    card.innerHTML=
+      '<div class="rec-head" onclick="toggleRec(this)">'
+      +'<div><div class="rec-date">'+r.date+' / '+r.maxQ+'Q制</div><div class="rec-teams">'+r.homeTeam+' vs '+r.awayTeam+'</div></div>'
+      +'<div style="text-align:right"><div class="rec-score">'+r.homeScore+' — '+r.awayScore+'</div><div class="rec-win">'+w+'</div></div>'
+      +'</div>'
+      +'<div class="rec-detail" id="rd'+r.id+'">'
+      +'<div class="rec-note">✏️ 数値をタップして編集・保存できます</div>'
+      +makeEditTbl(r.hp,r.homeTeam,'home',r.id)
+      +makeEditTbl(r.ap,r.awayTeam,'away',r.id)
+      +'<div class="rec-actions"><button class="rec-save" onclick="saveEdit('+r.id+')">💾 保存する</button><button class="rec-del" onclick="delRec('+r.id+')">🗑 削除</button></div>'
+      +'</div>';
+    el.appendChild(card);
+  });
+}
+function makeEditTbl(arr,tname,side,rid){
+  var rows=arr.map(function(p,i){
+    var f=['pts','fg2m','fg2a','fg3m','fg3a','ftm','fta','fouls'];
+    var vals=f.map(function(fd){return'<td><input class="st-input" type="number" data-rid="'+rid+'" data-side="'+side+'" data-idx="'+i+'" data-field="'+fd+'" value="'+(p[fd]||0)+'" min="0" inputmode="numeric"></td>';}).join('');
+    return'<tr><td><b>#'+p.num+'</b> '+p.name+'</td>'+vals+'</tr>';
+  }).join('');
+  return'<div class="stats-block"><div class="stats-tname '+side+'">'+tname+'</div><div class="stats-scroll"><table class="st"><thead><tr><th>選手</th><th>得点</th><th>2P成</th><th>2P試</th><th>3P成</th><th>3P試</th><th>FT成</th><th>FT試</th><th>反則</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+function toggleRec(h){h.nextElementSibling.classList.toggle('show');}
+function saveEdit(id){
+  var recs=JSON.parse(localStorage.getItem('scorebook_records')||'[]');
+  var r=recs.find(function(x){return x.id===id;});if(!r)return;
+  document.getElementById('rd'+id).querySelectorAll('.st-input').forEach(function(inp){
+    var side=inp.dataset.side,idx=parseInt(inp.dataset.idx),field=inp.dataset.field,val=parseInt(inp.value)||0;
+    var arr=side==='home'?r.hp:r.ap;
+    if(arr[idx])arr[idx][field]=val;
+  });
+  r.homeScore=r.hp.reduce(function(s,p){return s+p.pts;},0);
+  r.awayScore=r.ap.reduce(function(s,p){return s+p.pts;},0);
+  localStorage.setItem('scorebook_records',JSON.stringify(recs));
+  alert('保存しました！');renderRecords();
+}
+function delRec(id){
+  if(!confirm('この記録を削除しますか？'))return;
+  var recs=JSON.parse(localStorage.getItem('scorebook_records')||'[]').filter(function(r){return r.id!==id;});
+  localStorage.setItem('scorebook_records',JSON.stringify(recs));renderRecords();
+}
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
+</script>
+</body>
+</html>
